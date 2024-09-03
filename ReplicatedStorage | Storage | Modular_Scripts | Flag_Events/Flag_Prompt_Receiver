@@ -1,0 +1,38 @@
+local Flag_Prompt_Receiver = {}
+
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local flagToggle = replicatedStorage.Storage.Remotes.FLAG.FlagPromptToggle
+-- Flag Calls
+local rflag = game.Workspace.Game.CORE.Flags:WaitForChild("Red_Flag")
+local bflag = game.Workspace.Game.CORE.Flags:WaitForChild("Blue_Flag")
+local prompt = {rflag.Handle.Capture_Flag, rflag.Handle.Deposit_Flag, bflag.Handle.Capture_Flag, bflag.Handle.Deposit_Flag}
+
+function Flag_Prompt_Receiver.Red()
+	print("Receiver Prompt Connected")
+
+	local capture = function()
+		local enablePrompt = function()
+			print("Red Capture Prompt Enabled")
+			prompt[1].Enabled = true
+		end
+		
+		local disablePrompt = function()
+			print("Red Capture Prompt Disabled")
+			prompt[1].Enabled = false
+		end
+	end
+
+	local deposit = function()
+		local enablePrompt = function()
+			print("Red Deposit Prompt Enabled")
+			prompt[2].Enabled = true
+		end
+
+		local disablePrompt = function()
+			print("Red Deposit Prompt Disabled")
+			prompt[2].Enabled = false
+		end
+	end
+end
+
+return Flag_Prompt_Receiver
