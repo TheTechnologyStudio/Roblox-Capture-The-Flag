@@ -1,0 +1,175 @@
+--[[									
+	
+								 Made By GameHounds Interactive
+								  Do Not Redistribute
+									Auguest 19th, 2024
+									
+							##### ___________________ #####
+]]
+-- Service Calls
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local serverStorage = game:GetService("ServerStorage")
+local flagModules = replicatedStorage.Storage.Modular_Scripts.Flag_Events
+
+
+--local CapturePromptStarted = require(replicatedStorage.Storage.Modular_Scripts.Flag_Events.Capture_Prompt_Started)
+--local CapturePromptAbandoned = require(replicatedStorage.Storage.Modular_Scripts.Flag_Events.Capture_Prompt_Abandoned)
+local RTeam = game:GetService("Teams")["Red Team"]
+local BTeam = game:GetService("Teams")["Blue Team"]
+local capture_Event_ToClient = replicatedStorage.Storage.Remotes.Capture_Event_ToClient
+local promptToggle = replicatedStorage.Storage.Remotes.FLAG.FlagPromptToggle
+
+-- Flag Calls
+local rflag = game.Workspace.Game.CORE.Flags:WaitForChild("Red_Flag")
+local bflag = game.Workspace.Game.CORE.Flags:WaitForChild("Blue_Flag")
+
+-- Player Calls
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local Humanoid = character:WaitForChild("Humanoid")
+local HRP = character:WaitForChild("HumanoidRootPart")
+local prompt = {rflag.Handle.Capture_Flag, rflag.Handle.Deposit_Flag, bflag.Handle.Capture_Flag, bflag.Handle.Deposit_Flag}
+
+-- Misc Calls
+--local cprompt = script.Capture_Flag
+--local dprompt = script.Deposit_Flag
+local localconfig = script.Configuration
+local range = localconfig:GetAttribute("Range")
+
+-- Assigns player team value depending on players team
+function assignteam()
+	task.wait()
+	if player.Team == RTeam then
+		localconfig:SetAttribute("Team", 1)
+	elseif player.Team == BTeam then
+		localconfig:SetAttribute("Team", 2)
+	end
+end
+
+-- Clones prompt to workspace
+
+--function PromptClone()
+--	local prompt = {rflag.Handle.Capture_Flag, rflag.Handle.Deposit_Flag, bflag.Handle.Capture_Flag, bflag.Handle.Deposit_Flag}
+	
+--	if player.Team == RTeam then
+--		if prompt[2].Enabled == true then
+--			prompt[2].Enabled = false
+--			else prompt[2].Enabled = true
+--		end
+			
+--		if prompt[3].Enabled == true then
+--			prompt[3].Enabled = false
+--			else prompt[3].Enabled = true
+--		end
+--	elseif player.Team == BTeam then
+--		if prompt[1].Enabled == true then
+--			prompt[1].Enabled = false
+--			else prompt[1].Enabled = true
+--		end
+
+--		if prompt[4].Enabled == true then
+--			prompt[4].Enabled = false
+--			else prompt[4].Enabled = true
+--		end
+--	end
+--end
+
+function PromptClone()
+	task.wait()
+	local redDistance = (HRP.CFrame.Position - rflag.Handle.CFrame.Position).Magnitude
+	local blueDistance = (HRP.CFrame.Position - bflag.Handle.CFrame.Position).Magnitude
+	
+	if localconfig:GetAttribute("Team") == 1 then
+		if redDistance < range and Humanoid.Health > 0 then
+			if localconfig:GetAttribute("Flag_Active", true) then
+				if prompt[2].Enabled == true then
+				else
+					promptToggle:FireServer(deposit, enablePrompt , blue)
+				end
+			end
+		elseif blueDistance < range and Humanoid.Health > 0 then
+			if localconfig:GetAttribute("Flag_Active", false) then
+				if prompt[3].Enabled == true then
+				else
+					promptToggle:FireServer(capture, enablePrompt , red)
+				end
+			end		
+		end
+	elseif localconfig:GetAttribute("Team", 2) then
+		if blueDistance < range and Humanoid.Health > 0 then
+			if localconfig:GetAttribute("Flag_Active", true) then
+				if prompt[4].Enabled == true then
+				else
+					promptToggle:FireServer(deposit, enablePrompt , blue)
+				end
+			end
+		elseif redDistance < range and Humanoid.Health > 0 then
+			if localconfig:GetAttribute("Flag_Active", false) then
+				if prompt[1].Enabled == true then
+				else
+					promptToggle:FireServer(capture, enablePrompt , red)
+				end
+			end		
+		end
+	end
+end
+
+-- removes prompt from workspace
+function PromptDelete()
+	task.wait()
+	local redDistance = (HRP.CFrame.Position - rflag.Handle.CFrame.Position).Magnitude
+	local blueDistance = (HRP.CFrame.Position - bflag.Handle.CFrame.Position).Magnitude
+	if localconfig:GetAttribute("Team") == 1 then
+		if redDistance > range and Humanoid.Health >= 0 then
+			if prompt[2].Enabled == true then
+				prompt[2].Enabled = false
+			end
+		elseif blueDistance > range and Humanoid.Health >= 0 then
+			if prompt[3].Enabled == true then
+				prompt[3].Enabled = false
+			end	
+		end		
+	elseif localconfig:GetAttribute("Team", 2) then
+		if blueDistance > range and Humanoid.Health >= 0 then
+			if prompt[4].Enabled == true then
+				prompt[4].Enabled = false
+			end
+		elseif redDistance > range and Humanoid.Health >= 0 then
+			if prompt[1].Enabled == true then
+				prompt[1].Enabled = false
+			end		
+		end
+	end
+end 
+
+local captureFlag = require(flagModules.Capture_Flag)
+local depositFlag = require(flagModules.Deposit_Flag)
+-- Main Loop to call starter functions
+captureFlag.red_capture_flag(rflag.Handle.Capture_Flag)
+captureFlag.blue_capture_flag(bflag.Handle.Capture_Flag)
+depositFlag.red_deposit_flag(bflag.Handle.Deposit_Flag, rflag.Handle.Capture_Flag)
+depositFlag.blue_deposit_flag(rflag.Handle.Deposit_Flag, bflag.Handle.Capture_Flag)
+
+capture_Event_ToClient.OnClientEvent:Connect(function()
+	print("config set")
+	local character = player.Character
+	character["Flag_Controller_Script"].Configuration:SetAttribute("Flag_Active", true)
+end)
+
+while true do
+	task.wait()
+	assignteam()
+	PromptClone()
+	--PromptDelete()``
+	-- Local Module Calls
+
+--	-- Red Modules
+
+--	CapturePromptStarted.red_captureprompt_started()
+--	CapturePromptAbandoned.red_captureprompt_abandoned()
+
+--	-- Blue Modules
+--	captureFlag.blue_capture_flag()
+	--CapturePromptStarted.blue_captureprompt_started()
+	--CapturePromptAbandoned.blue_captureprompt_abandoned()
+end
